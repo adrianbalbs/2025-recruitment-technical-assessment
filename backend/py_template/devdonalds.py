@@ -139,7 +139,7 @@ def get_summary(entry: CookbookEntry) -> Optional[dict]:
                 if item.name not in db:
                     return None
 
-                if dfs(item, item.quantity * quantity) == -1:
+                if not dfs(item, item.quantity * quantity):
                     return None
         return "OK"
 
