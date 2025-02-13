@@ -1,5 +1,6 @@
+from collections import defaultdict
 from dataclasses import dataclass
-from typing import List, Union
+from typing import List, Optional, Union
 
 from flask import Flask, jsonify, request
 
@@ -84,18 +85,87 @@ def parse_handwriting(recipeName: str) -> Union[str | None]:
 
 # [TASK 2] ====================================================================
 # Endpoint that adds a CookbookEntry to your magical cookbook
+
+db: dict[str, CookbookEntry] = {}
+
+
 @app.route("/entry", methods=["POST"])
 def create_entry():
-    # TODO: implement me
-    return "not implemented", 500
+    data = request.get_json()
+    if data["name"] in db:
+        return {}, 400
+
+    if data["type"] == "recipe":
+        seen = set()
+        for item in data["requiredItems"]:
+            if item["name"] in seen:
+                return {}, 400
+            seen.add(item["name"])
+
+        db[data["name"]] = Recipe(
+            name=data["name"],
+            required_items=list(
+                map(
+                    lambda e: RequiredItem(name=e["name"], quantity=e["quantity"]),
+                    data["requiredItems"],
+                )
+            ),
+        )
+        return {}, 200
+
+    elif data["type"] == "ingredient":
+        if data["cookTime"] < 0:
+            return {}, 400
+        db[data["name"]] = Ingredient(name=data["name"], cook_time=data["cookTime"])
+        return {}, 200
+
+    return {}, 400
 
 
 # [TASK 3] ====================================================================
 # Endpoint that returns a summary of a recipe that corresponds to a query name
+def get_summary(entry: CookbookEntry) -> Optional[dict]:
+    ingredients = defaultdict(int)
+    cook_time = 0
+
+    def dfs(entry: CookbookEntry, quantity: int = 1) -> Optional[str]:
+        nonlocal cook_time
+        if isinstance(entry, Ingredient):
+            cook_time += entry.cook_time * quantity
+            ingredients[entry.name] += quantity
+            return "OK"
+        if isinstance(entry, Recipe):
+            for item in entry.required_items:
+                if item.name not in db:
+                    return None
+
+                if dfs(item, item.quantity * quantity) == -1:
+                    return None
+        return "OK"
+
+    if not dfs(entry):
+        return None
+
+    return {
+        "name": entry.name,
+        "cookTime": cook_time,
+        "ingredients": [{"name": k, "quantity": v} for k, v in ingredients.items()],
+    }
+
+
 @app.route("/summary", methods=["GET"])
 def summary():
-    # TODO: implement me
-    return "not implemented", 500
+    name = request.args.get("name")
+    if name not in db:
+        return {}, 400
+    if not isinstance(db[name], Recipe):
+        return {}, 400
+
+    res = get_summary(db[name])
+    if not res:
+        return {}, 400
+
+    return res, 200
 
 
 # =============================================================================
