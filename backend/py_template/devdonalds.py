@@ -56,23 +56,28 @@ def iswhitespace(chr: str) -> bool:
 
 def parse_handwriting(recipeName: str) -> Union[str | None]:
     tokens = []
-    str_buff = ""
-    word_found = False
-    str_iter = iter(recipeName)
+    str_buff = (
+        recipeName[0].upper() if len(recipeName) > 0 and recipeName[0].isalpha() else ""
+    )
+    str_iter = iter(recipeName[1:])
+
     while c := next(str_iter, None):
         if c.isalpha():
-            if word_found:
-                str_buff += c.upper()
-                word_found = False
-            else:
-                str_buff += c
+            str_buff += c.lower()
         elif iswhitespace(c):
-            tokens.append(str_buff)
-            word_found = True
+            if str_buff:
+                tokens.append(str_buff)
+                str_buff = ""
+
+            # skip all whitespace
             while (c := next(str_iter, None)) and iswhitespace(c):
                 pass
-            if not c:
-                break
+            if c:
+                str_buff += c.upper()
+
+    # there could be a remaining word left in the buffer
+    if str_buff:
+        tokens.append(str_buff)
     new_name = " ".join(tokens)
     return new_name if len(new_name) > 0 else None
 
