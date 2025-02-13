@@ -156,11 +156,8 @@ def get_summary(entry: CookbookEntry) -> Optional[dict]:
 @app.route("/summary", methods=["GET"])
 def summary():
     name = request.args.get("name")
-    if name not in db:
+    if name not in db or not isinstance(db[name], Recipe):
         return {}, 400
-    if not isinstance(db[name], Recipe):
-        return {}, 400
-
     res = get_summary(db[name])
     if not res:
         return {}, 400
