@@ -51,34 +51,35 @@ def parse():
 # Takes in a recipeName and returns it in a form that
 
 
-def iswhitespace(chr: str) -> bool:
-    return chr.isspace() or chr == "_" or chr == "-"
+def parse_handwriting(recipeName: str) -> Optional[str]:
+    def iswhitespace(chr: str) -> bool:
+        return chr.isspace() or chr == "_" or chr == "-"
 
-
-def parse_handwriting(recipeName: str) -> Union[str | None]:
     tokens = []
-    str_buff = (
+    word_buffer = (
         recipeName[0].upper() if len(recipeName) > 0 and recipeName[0].isalpha() else ""
     )
     str_iter = iter(recipeName[1:])
 
     while c := next(str_iter, None):
         if c.isalpha():
-            str_buff += c.lower()
+            word_buffer += c.lower()
         elif iswhitespace(c):
-            if str_buff:
-                tokens.append(str_buff)
-                str_buff = ""
+            if word_buffer:
+                tokens.append(word_buffer)
+                word_buffer = ""
 
-            # skip all whitespace
+            # skip all whitespace and "_" or "-" characters
             while (c := next(str_iter, None)) and iswhitespace(c):
                 pass
+
+            # potentially pointing to the start of a new word
             if c:
-                str_buff += c.upper()
+                word_buffer += c.upper()
 
     # there could be a remaining word left in the buffer
-    if str_buff:
-        tokens.append(str_buff)
+    if word_buffer:
+        tokens.append(word_buffer)
     new_name = " ".join(tokens)
     return new_name if len(new_name) > 0 else None
 
