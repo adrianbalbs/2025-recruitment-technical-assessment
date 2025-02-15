@@ -1,6 +1,6 @@
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import List, Optional, Union
+from typing import List, Optional
 
 from flask import Flask, jsonify, request
 
@@ -140,7 +140,7 @@ def get_summary(entry: CookbookEntry) -> Optional[dict]:
                 if item.name not in db:
                     return None
 
-                if not dfs(item, item.quantity * quantity):
+                if not dfs(db[item.name], item.quantity * quantity):
                     return None
         return "OK"
 
