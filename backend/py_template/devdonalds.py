@@ -123,6 +123,10 @@ def create_entry():
     return {}, 400
 
 
+# [TASK 3] ====================================================================
+# Endpoint that returns a summary of a recipe that corresponds to a query name
+
+
 class CookbookEntryError(Exception):
     """
     An error for when a cookbook entry does not exist in the database.
@@ -131,8 +135,6 @@ class CookbookEntryError(Exception):
     pass
 
 
-# [TASK 3] ====================================================================
-# Endpoint that returns a summary of a recipe that corresponds to a query name
 def get_summary(entry: CookbookEntry) -> dict:
     """
     Retrieves a summary of a recipe which is a dictionary containing the total cook time,
