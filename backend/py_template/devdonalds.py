@@ -93,7 +93,7 @@ db: dict[str, CookbookEntry] = {}
 @app.route("/entry", methods=["POST"])
 def create_entry():
     data = request.get_json()
-    if data["name"] in db:
+    if not data or data["name"] in db:
         return {}, 400
 
     if data["type"] == "recipe":
