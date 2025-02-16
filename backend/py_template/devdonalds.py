@@ -123,30 +123,40 @@ def create_entry():
     return {}, 400
 
 
+class CookbookEntryError(Exception):
+    """
+    An error for when a cookbook entry does not exist in the database.
+    """
+
+    pass
+
+
 # [TASK 3] ====================================================================
 # Endpoint that returns a summary of a recipe that corresponds to a query name
-def get_summary(entry: CookbookEntry) -> Optional[dict]:
+def get_summary(entry: CookbookEntry) -> dict:
+    """
+    Retrieves a summary of a recipe which lists the total cook time, and the quantity
+    of ingredients needed overall. Raises a CookbookEntryError exception if a
+    required item does not exist in the database.
+    """
     ingredients = defaultdict(int)
     cook_time = 0
 
-    def dfs(entry: CookbookEntry, quantity: int = 1) -> Optional[str]:
+    def dfs(entry: CookbookEntry, quantity: int = 1):
         nonlocal cook_time
         if isinstance(entry, Ingredient):
             cook_time += entry.cook_time * quantity
             ingredients[entry.name] += quantity
-            return "OK"
+            return
+
         if isinstance(entry, Recipe):
             for item in entry.required_items:
                 if item.name not in db:
-                    return None
+                    raise CookbookEntryError(f"Recipe {item.name} does not exist.")
 
-                if not dfs(db[item.name], item.quantity * quantity):
-                    return None
-        return "OK"
+                dfs(db[item.name], item.quantity * quantity)
 
-    if not dfs(entry):
-        return None
-
+    dfs(entry)
     return {
         "name": entry.name,
         "cookTime": cook_time,
@@ -159,11 +169,10 @@ def summary():
     name = request.args.get("name")
     if name not in db or not isinstance(db[name], Recipe):
         return {}, 400
-    res = get_summary(db[name])
-    if not res:
+    try:
+        return get_summary(db[name]), 200
+    except CookbookEntryError:
         return {}, 400
-
-    return res, 200
 
 
 # =============================================================================
