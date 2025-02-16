@@ -135,9 +135,9 @@ class CookbookEntryError(Exception):
 # Endpoint that returns a summary of a recipe that corresponds to a query name
 def get_summary(entry: CookbookEntry) -> dict:
     """
-    Retrieves a summary of a recipe which lists the total cook time, and the quantity
-    of ingredients needed overall. Raises a CookbookEntryError exception if a
-    required item does not exist in the database.
+    Retrieves a summary of a recipe which is a dictionary containing the total cook time,
+    and the quantity of ingredients needed overall. Raises a CookbookEntryError exception
+    if a required item does not exist in the database.
     """
     ingredients = defaultdict(int)
     cook_time = 0
